@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
-# This script displays DNS record info for subdomains using awk and dig
+# This script displays DNS record information for subdomains using awk
 
 domain=$1
 subdomain=$2
 
-# Function to get subdomain info
-get_subdomain_info() {
-    local sub=$1
-    ip=$(dig +short "$sub.$domain")
-    # Use awk to parse and print
-    echo "$sub $ip" | awk '{print "The subdomain "$1" is a A record and points to "$2}'
+# Function to get DNS info
+get_info() {
+    full_domain=$1
+    ip=$(dig +short "$full_domain")
+
+    echo "$full_domain $ip" | awk '{print "The subdomain "$1" is a A record and points to "$2}'
 }
 
 # If subdomain is provided
 if [ -n "$subdomain" ]; then
-    get_subdomain_info "$subdomain"
+    get_info "$subdomain"
 else
-    # Default subdomains in order
-    for sub in www lb-01 web-01 web-02; do
-        get_subdomain_info "$sub"
-    done
+    get_info "www.44.212.25.228.nip.io"
+    get_info "lb-01.44.212.25.228.nip.io"
+    get_info "web-01.34.203.218.185.nip.io"
+    get_info "web-02.44.202.164.145.nip.io"
 fi
