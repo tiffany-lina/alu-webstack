@@ -1,39 +1,26 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Displays subdomain A records using dig and awk with nip.io
 
-# Function to display subdomain info
 display_subdomain() {
-    local domain=$1
-    local subdomain=$2
-    local ip=""
-
-    # Map subdomains to IPs
-    case $subdomain in
-        www|lb-01)
-            ip="44.212.25.228"
-            ;;
-        web-01)
-            ip="34.203.218.185"
-            ;;
-        web-02)
-            ip="44.202.164.145"
-            ;;
-    esac
-
-    # Use dig with nip.io
-    local result=$(dig $subdomain.$ip.nip.io | grep -A1 'ANSWER SECTION:' | awk '/IN/ {print $5}')
-    echo "The subdomain $subdomain is a A record and points to $result"
+    local sub=$1
+    local domain=$2
+    local ip=$(dig $sub.$domain | awk '/IN[[:space:]]A/ {print $5}')
+    echo "The subdomain $sub is a A record and points to $ip"
 }
 
 domain=$1
 subdomain=$2
 
-# Default subdomains order
-subdomains=("www" "lb-01" "web-01" "web-02")
+# Map each subdomain to its correct nip.io domain
+declare -A sub_domains
+sub_domains=( ["www"]="44.212.25.228.nip.io" ["lb-01"]="44.212.25.228.nip.io" ["web-01"]="34.203.218.185.nip.io" ["web-02"]="44.202.164.145.nip.io" )
+
+subs=("www" "lb-01" "web-01" "web-02")
 
 if [ -z "$subdomain" ]; then
-    for sub in "${subdomains[@]}"; do
-        display_subdomain $domain $sub
+    for s in "${subs[@]}"; do
+        display_subdomain $s ${sub_domains[$s]}
     done
 else
-    display_subdomain $domain $subdomain
+    display_subdomain $subdomain ${sub_domains[$subdomain]}
 fi
