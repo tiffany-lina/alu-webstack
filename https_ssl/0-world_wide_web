@@ -1,28 +1,29 @@
 #!/usr/bin/env bash
-# 0-world_wide_web: display info about subdomains of a domain
+# 0-world_wide_web: Display information about subdomains
 
-# Function to show subdomain info
+# Function to fetch subdomain info
 get_subdomain_info() {
     local domain=$1
-    local sub=$2
-    # Use dig to get the A record
-    local record=$(dig ${sub}.${domain} +short)
-    if [ -n "$record" ]; then
-        echo "The subdomain $sub is a A record and points to $record"
-    else
-        echo "The subdomain $sub does not exist or has no A record"
-    fi
+    local subdomain=$2
+
+    # +short returns only the IP
+    local ip=$(dig +short ${subdomain}.${domain})
+    
+    # Get the record type (A, CNAME, etc.)
+    local record_type=$(dig ${subdomain}.${domain} | awk '/IN/ {print $4; exit}')
+
+    echo "The subdomain $subdomain is a $record_type record and points to $ip"
 }
 
 domain=$1
 subdomain=$2
 
+# If only domain is given, show info for all subdomains
 if [ -z "$subdomain" ]; then
-    # Display all subdomains in the specific order
     for sub in www lb-01 web-01 web-02; do
         get_subdomain_info $domain $sub
     done
 else
-    # Display only the specified subdomain
+    # If a subdomain is specified, show only that
     get_subdomain_info $domain $subdomain
 fi
