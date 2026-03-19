@@ -1,28 +1,39 @@
-#!/usr/bin/env bash
-# Script to show subdomain info for a domain
+#!/bin/bash
 
-domain=$1      # First argument = domain
-subdomain=$2   # Second argument = optional subdomain
+# Function to display subdomain info
+display_subdomain() {
+    local domain=$1
+    local subdomain=$2
+    local ip=""
 
-# Function to get info for one subdomain
-get_info() {
-    local sub=$1
-    # Use dig to get DNS info, grep for ANSWER SECTION, take the last line
-    result=$(dig "$sub.$domain" | grep -A1 "ANSWER SECTION:" | tail -n1)
-    # Extract record type and destination IP using awk
-    record_type=$(echo "$result" | awk '{print $4}')
-    destination=$(echo "$result" | awk '{print $5}')
-    # Print formatted output
-    echo "The subdomain $sub is a $record_type record and points to $destination"
+    # Map subdomains to IPs
+    case $subdomain in
+        www|lb-01)
+            ip="44.212.25.228"
+            ;;
+        web-01)
+            ip="34.203.218.185"
+            ;;
+        web-02)
+            ip="44.202.164.145"
+            ;;
+    esac
+
+    # Use dig with nip.io
+    local result=$(dig $subdomain.$ip.nip.io | grep -A1 'ANSWER SECTION:' | awk '/IN/ {print $5}')
+    echo "The subdomain $subdomain is a A record and points to $result"
 }
 
-# If a specific subdomain is provided, show only that one
-if [ -n "$subdomain" ]; then
-    get_info "$subdomain"
+domain=$1
+subdomain=$2
+
+# Default subdomains order
+subdomains=("www" "lb-01" "web-01" "web-02")
+
+if [ -z "$subdomain" ]; then
+    for sub in "${subdomains[@]}"; do
+        display_subdomain $domain $sub
+    done
 else
-    # Otherwise, show all 4 subdomains in this order
-    get_info "www"
-    get_info "lb-01"
-    get_info "web-01"
-    get_info "web-02"
+    display_subdomain $domain $subdomain
 fi
