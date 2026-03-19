@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
 # This script displays the IP address of subdomains for a given domain
 
-# Function to check a subdomain
-check_subdomain() {
-    local domain=$1
-    local sub=$2
-    ip=$(dig "$sub.$domain" | awk '/ANSWER SECTION:/ {getline; print $5}')
-    echo "The subdomain $sub is a A record and points to $ip"
-}
-
-# Main
 domain=$1
 subdomain=$2
 
+# Function to check a subdomain
+check_subdomain() {
+    local sub=$1
+    local ip=$(dig +short $sub.$domain)
+    local record_type="A"
+    echo "The subdomain $sub is a $record_type record and points to $ip"
+}
+
 if [ -z "$subdomain" ]; then
-    for sub in www lb-01 web-01 web-02; do
-        check_subdomain "$domain" "$sub"
-    done
+    # No subdomain specified, check all in order
+    check_subdomain "www"
+    check_subdomain "lb-01"
+    check_subdomain "web-01"
+    check_subdomain "web-02"
 else
-    check_subdomain "$domain" "$subdomain"
+    # Specific subdomain provided
+    check_subdomain "$subdomain"
 fi
