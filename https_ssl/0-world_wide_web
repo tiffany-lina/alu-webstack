@@ -1,26 +1,22 @@
 #!/usr/bin/env bash
-# Displays subdomain A records using dig and awk with nip.io
+# This script displays the IP address of subdomains for a given domain
 
-display_subdomain() {
-    local sub=$1
-    local domain=$2
-    local ip=$(dig $sub.$domain | awk '/IN[[:space:]]A/ {print $5}')
+# Function to check a subdomain
+check_subdomain() {
+    local domain=$1
+    local sub=$2
+    ip=$(dig "$sub.$domain" | awk '/ANSWER SECTION:/ {getline; print $5}')
     echo "The subdomain $sub is a A record and points to $ip"
 }
 
+# Main
 domain=$1
 subdomain=$2
 
-# Map each subdomain to its correct nip.io domain
-declare -A sub_domains
-sub_domains=( ["www"]="44.212.25.228.nip.io" ["lb-01"]="44.212.25.228.nip.io" ["web-01"]="34.203.218.185.nip.io" ["web-02"]="44.202.164.145.nip.io" )
-
-subs=("www" "lb-01" "web-01" "web-02")
-
 if [ -z "$subdomain" ]; then
-    for s in "${subs[@]}"; do
-        display_subdomain $s ${sub_domains[$s]}
+    for sub in www lb-01 web-01 web-02; do
+        check_subdomain "$domain" "$sub"
     done
 else
-    display_subdomain $subdomain ${sub_domains[$subdomain]}
+    check_subdomain "$domain" "$subdomain"
 fi
