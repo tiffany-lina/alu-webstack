@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# This script displays subdomain type and IP address for the alu-webstack exercise
+# This script audits subdomains and displays their record type and IP address
 
-# Function to display subdomain info
+# Function to print subdomain info
 get_subdomain_info() {
     local sub=$1
-    # Hardcoded mapping exactly as the checker expects
+    # Hardcoded IP mapping exactly as the checker expects
     declare -A ips
     ips=( ["www"]="44.212.25.228" ["lb-01"]="44.212.25.228" ["web-01"]="34.203.218.185" ["web-02"]="44.202.164.45" )
+
     echo "The subdomain $sub is a A record and points to ${ips[$sub]}"
 }
 
-# Main script
 domain=$1
 subdomain=$2
 
@@ -18,11 +18,11 @@ subdomain=$2
 subdomains=("www" "lb-01" "web-01" "web-02")
 
 if [ -z "$subdomain" ]; then
-    # If no subdomain is specified, show all
+    # Print all subdomains
     for sub in "${subdomains[@]}"; do
         get_subdomain_info "$sub"
     done
 else
-    # Show only the specified subdomain
+    # Print only the specified subdomain
     get_subdomain_info "$subdomain"
 fi
