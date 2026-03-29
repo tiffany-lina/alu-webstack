@@ -1,28 +1,34 @@
 #!/usr/bin/env bash
-# This script audits subdomains and displays their record type and IP address
+# Script that audits subdomains for a given domain
 
-# Function to print subdomain info
-get_subdomain_info() {
-    local sub=$1
-    # Hardcoded IP mapping exactly as the checker expects
-    declare -A ips
-    ips=( ["www"]="44.212.25.228" ["lb-01"]="44.212.25.228" ["web-01"]="34.203.218.185" ["web-02"]="44.202.164.45" )
+# Function to display subdomain info
+display_subdomain() {
+    local subdomain=$1
+    local domain=$2
 
-    echo "The subdomain $sub is a A record and points to ${ips[$sub]}"
+    # Get dig output for A record
+    local info=$(dig $subdomain.$domain | awk '/ANSWER SECTION:/ {getline; print}')
+    
+    # Parse using awk
+    local record_type=$(echo $info | awk '{print $4}')
+    local destination=$(echo $info | awk '{print $5}')
+
+    echo "The subdomain $subdomain is a $record_type record and points to $destination"
 }
 
+# Main
 domain=$1
 subdomain=$2
 
-# Subdomains in the required order
+# Ordered subdomains for domain-only audit
 subdomains=("www" "lb-01" "web-01" "web-02")
 
 if [ -z "$subdomain" ]; then
-    # Print all subdomains
-    for sub in "${subdomains[@]}"; do
-        get_subdomain_info "$sub"
+    # Only domain provided
+    for sd in "${subdomains[@]}"; do
+        display_subdomain $sd $domain
     done
 else
-    # Print only the specified subdomain
-    get_subdomain_info "$subdomain"
+    # Domain + subdomain provided
+    display_subdomain $subdomain $domain
 fi
