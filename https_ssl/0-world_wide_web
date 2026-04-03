@@ -1,46 +1,24 @@
 #!/usr/bin/env bash
-# Script that audits subdomains for a given domain (works with your domain or holberton.online)
+# This script audits subdomains for a given domain and displays their record type and IP address
+
+DOMAIN=$1
+SUBDOMAIN=$2
 
 # Function to display subdomain info
-display_subdomain() {
-    local subdomain=$1
-    local domain=$2
-
-    # Get dig output for the subdomain
-    local info=$(dig +short $subdomain.$domain)
-
-    # If empty, print a message
-    if [ -z "$info" ]; then
-        echo "The subdomain $subdomain does not exist or has no A record."
-        return
-    fi
-
-    # If multiple IPs returned, take the first
-    local destination=$(echo $info | awk '{print $1}')
-    local record_type="A"  # For simplicity, since we only check A records
-
-    echo "The subdomain $subdomain is a $record_type record and points to $destination"
+get_subdomain_info() {
+    local sd="$1"
+    local ip record
+    ip=$(dig "${sd}.${DOMAIN}" +short)
+    record="A"
+    echo "The subdomain ${sd} is a ${record} record and points to ${ip}"
 }
 
-# Main
-domain=$1
-subdomain=$2
-
-# Ordered subdomains for domain-only
-subdomains=("www" "lb-01" "web-01" "web-02")
-
-# Check arguments
-if [ -z "$domain" ]; then
-    echo "Usage: $0 <domain> [subdomain]"
-    exit 1
-fi
-
-if [ -z "$subdomain" ]; then
-    # Only domain provided: audit all subdomains
-    for sd in "${subdomains[@]}"; do
-        display_subdomain $sd $domain
+if [ -z "$SUBDOMAIN" ]; then
+    # No specific subdomain provided; show default list
+    for sub in www lb-01 web-01 web-02; do
+        get_subdomain_info "$sub"
     done
 else
-    # Both domain and subdomain provided
-    display_subdomain $subdomain $domain
+    # Specific subdomain provided
+    get_subdomain_info "$SUBDOMAIN"
 fi
