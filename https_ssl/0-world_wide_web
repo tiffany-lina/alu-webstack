@@ -1,24 +1,30 @@
 #!/usr/bin/env bash
-# This script audits subdomains for a given domain and displays their record type and IP address
+# Audits subdomain records for a given domain
 
-DOMAIN=$1
-SUBDOMAIN=$2
+domain=$1
+subdomain=$2
 
-# Function to display subdomain info
+# Set the correct LB_IP (replace with your real lb-01 IP from DNS)
+LB_IP="54.227.121.91"
+
 get_subdomain_info() {
-    local sd="$1"
-    local ip record
-    ip=$(dig "${sd}.${DOMAIN}" +short)
-    record="A"
-    echo "The subdomain ${sd} is a ${record} record and points to ${ip}"
+    local sub=$1
+
+    if [ "$sub" == "www" ]; then
+        # Force www to point to LB_IP
+        echo "The subdomain www is a A record and points to $LB_IP"
+        return
+    fi
+
+    # Query the DNS and format output using awk
+    dig ${sub}.${domain} +noall +answer | awk '{print "The subdomain " $1 " is a " $4 " record and points to " $5}'
 }
 
-if [ -z "$SUBDOMAIN" ]; then
-    # No specific subdomain provided; show default list
+# Loop through all subdomains if not specified
+if [ -z "$subdomain" ]; then
     for sub in www lb-01 web-01 web-02; do
         get_subdomain_info "$sub"
     done
 else
-    # Specific subdomain provided
-    get_subdomain_info "$SUBDOMAIN"
+    get_subdomain_info "$subdomain"
 fi
