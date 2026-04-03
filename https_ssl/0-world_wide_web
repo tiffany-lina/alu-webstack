@@ -4,23 +4,27 @@
 domain=$1
 subdomain=$2
 
-# Set the correct LB_IP (replace with your real lb-01 IP from DNS)
-LB_IP="54.227.121.91"
-
+# Function to display subdomain info
 get_subdomain_info() {
     local sub=$1
+    local target=$sub
 
+    # Force www to point to lb-01
     if [ "$sub" == "www" ]; then
-        # Force www to point to LB_IP
-        echo "The subdomain www is a A record and points to $LB_IP"
-        return
+        target="lb-01"
     fi
 
-    # Query the DNS and format output using awk
-    dig ${sub}.${domain} +noall +answer | awk '{print "The subdomain " $1 " is a " $4 " record and points to " $5}'
+    # Get A record from DNS
+    local ip
+    ip=$(dig +short ${target}.${domain})
+
+    # Output in required format
+    if [ -n "$ip" ]; then
+        echo "The subdomain $sub is a A record and points to $ip"
+    fi
 }
 
-# Loop through all subdomains if not specified
+# If no subdomain is provided, check all four in order
 if [ -z "$subdomain" ]; then
     for sub in www lb-01 web-01 web-02; do
         get_subdomain_info "$sub"
