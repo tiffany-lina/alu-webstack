@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 # This script audits subdomains of a given domain and displays their A records
 
-# Function to get subdomain info
+# Function to get info about a subdomain
 get_subdomain_info() {
     local domain=$1
     local subdomain=$2
-    # Get DNS record using dig
+    # Use dig to get the DNS record and parse it with awk
     record=$(dig ${subdomain}.${domain} | awk '/ANSWER SECTION:/ {getline; print}')
-    name=$(echo $record | awk '{print $1}' | sed 's/\.$//')
     type=$(echo $record | awk '{print $4}')
     dest=$(echo $record | awk '{print $5}')
     echo "The subdomain ${subdomain} is a ${type} record and points to ${dest}"
@@ -16,12 +15,12 @@ get_subdomain_info() {
 domain=$1
 subdomain=$2
 
+# If no specific subdomain is passed, check all 4 in order
 if [ -z "$subdomain" ]; then
-    # No subdomain argument: loop through all 4
     for sd in www lb-01 web-01 web-02; do
         get_subdomain_info $domain $sd
     done
 else
-    # Only one subdomain
+    # Only check the specified subdomain
     get_subdomain_info $domain $subdomain
 fi
