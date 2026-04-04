@@ -1,34 +1,27 @@
 #!/usr/bin/env bash
-# Audits subdomain records for a given domain
+# This script audits subdomains of a given domain and displays their A records
+
+# Function to get subdomain info
+get_subdomain_info() {
+    local domain=$1
+    local subdomain=$2
+    # Get DNS record using dig
+    record=$(dig ${subdomain}.${domain} | awk '/ANSWER SECTION:/ {getline; print}')
+    name=$(echo $record | awk '{print $1}' | sed 's/\.$//')
+    type=$(echo $record | awk '{print $4}')
+    dest=$(echo $record | awk '{print $5}')
+    echo "The subdomain ${subdomain} is a ${type} record and points to ${dest}"
+}
 
 domain=$1
 subdomain=$2
 
-# Function to display subdomain info
-get_subdomain_info() {
-    local sub=$1
-    local target=$sub
-
-    # Force www to point to lb-01
-    if [ "$sub" == "www" ]; then
-        target="lb-01"
-    fi
-
-    # Get A record from DNS
-    local ip
-    ip=$(dig +short ${target}.${domain})
-
-    # Output in required format
-    if [ -n "$ip" ]; then
-        echo "The subdomain $sub is a A record and points to $ip"
-    fi
-}
-
-# If no subdomain is provided, check all four in order
 if [ -z "$subdomain" ]; then
-    for sub in www lb-01 web-01 web-02; do
-        get_subdomain_info "$sub"
+    # No subdomain argument: loop through all 4
+    for sd in www lb-01 web-01 web-02; do
+        get_subdomain_info $domain $sd
     done
 else
-    get_subdomain_info "$subdomain"
+    # Only one subdomain
+    get_subdomain_info $domain $subdomain
 fi
